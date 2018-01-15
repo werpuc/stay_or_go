@@ -22,7 +22,7 @@ ui <- fluidPage(
 
 server <- function(input, output, session) {
   output$plot <- renderPlot({
-    ggplot(data, aes(x = date, y = work)) +
+    ggplot(data, aes_string(x = "date", y = input$type)) +
       geom_point()
   })
 }
