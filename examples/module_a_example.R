@@ -1,19 +1,18 @@
 library(tidyverse)
+library(tidytext)
 
-#1
+#1 - get data from file
 setwd("C:\\Users\\Weronika\\stay_or_go\\examples")
 original_data = read.csv("module_a_data.csv", stringsAsFactors=FALSE)
+date <- substring(original_data[1, 2], 0, 10)
 data <- original_data[, c('X', 'tweet')]
 
+#2 - tokenize tweets and drop too short ones
 tweets_words <- data %>%
   unnest_tokens(word, tweet, token = "words") %>%
-  filter(!(word %in% pl_stop_words)) %>%
   filter(nchar(word) >= 3)
 
-head(tweets_words)
-
-#2
-pl_stop_words <- read_lines("polish_stopwords.txt")
+#3 - prepare dictionary to get rid of flection
 stem_dictionary <- read_csv2("polimorfologik-2.1.txt", col_names = c("stem", "word"))
 
 stem_dictionary <- stem_dictionary %>%
@@ -21,7 +20,7 @@ stem_dictionary <- stem_dictionary %>%
          word = str_to_lower(word)) %>%
   distinct()
 
-#3
+#4 - join data and dictionary to have plain words
 tweets_words_stem <- tweets_words %>%
   select(X, word) %>%
   filter(word != 'http') %>%
@@ -29,33 +28,24 @@ tweets_words_stem <- tweets_words %>%
   rename(word_stem = stem) %>%
   filter(!is.na(word_stem))
 
-#4
-tweets_words_stem %>%
-  count(word_stem) %>%
-  ungroup() %>%
-  arrange(n) %>%
-  mutate(word = factor(word_stem, levels=word_stem)) %>%
-  top_n(30, n) %>%
-  ggplot() +
-  geom_bar(aes(word, n), stat = "identity", fill = "lightgreen", color = "gray50") +
-  coord_flip()
-
-#5
+#5 - get sentiment dictionary
 pl_word_sentiment <- read_csv("nawl-analysis.csv")
 pl_word_sentiment <- pl_word_sentiment[, c("word", "category")]
+
+#6 - join data and dictionary to categorize words
 tweets_words_sentiment <- inner_join(tweets_words_stem, 
                                      pl_word_sentiment, 
                                      by = c("word_stem" = "word"))
 
-# happines     1
-# anger       -1
-# sadness     -1
-# fear        -1
-# disgust     -1
-# neutral      0
-# unclassified 0
+# happines      1
+# anger        -1
+# sadness      -1
+# fear         -1
+# disgust      -1
+# neutral       0
+# unclassified  0
 
-
+#7 - transform category into points
 tweets_words_sentiment <- tweets_words_sentiment %>%
   mutate(category = case_when(.$category == 'A' ~ '-1',
                               .$category == 'H' ~ '1',
@@ -67,6 +57,16 @@ tweets_words_sentiment <- tweets_words_sentiment %>%
 
 tweets_words_sentiment$category = as.numeric(tweets_words_sentiment$category)
 
+#8 - get back to tweets
 tweets_results <- aggregate(category ~ X, tweets_words_sentiment, sum)
 
-result <- sum(tweets_results$category)
+#9 - summarize results for whole data
+tweets_number <- nrow(tweets_results)
+tweets_bad <- round(nrow(subset(tweets_results, category < 0))/tweets_number, 4)*100
+tweets_good <- round(nrow(subset(tweets_results, category > 0))/tweets_number, 4)*100
+
+cat('Results for', date, '\n', tweets_good, '% good \n', tweets_bad, '% bad')
+ 
+# Results for 2017-01-01 
+# 11.34 % good 
+# 16.49 % bad
