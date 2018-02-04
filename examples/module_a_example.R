@@ -9,6 +9,7 @@ data <- original_data[, c('X', 'tweet')]
 
 #2 - tokenize tweets and drop too short ones
 tweets_words <- data %>%
+  mutate(tweet = str_to_lower(tweet)) %>%
   unnest_tokens(word, tweet, token = "words") %>%
   filter(nchar(word) >= 3)
 
