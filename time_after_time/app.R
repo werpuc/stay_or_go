@@ -10,7 +10,7 @@ data$weekday <- !(as.POSIXlt(data$date)$wday == 0 | as.POSIXlt(data$date)$wday =
 final_date <- '2018-03-17'
 time_difference <- ceiling(as.numeric(difftime(final_date, Sys.Date())))
 mean_worktime_pomodoro <- round(mean(data$work))
-mean_worktime_hours <- round(mean_worktime_pomodoro/2)
+mean_worktime_hours <- round(mean_worktime_pomodoro/2, 1)
 shame_days <- as.numeric(count(data[data$work == 0, ]))
 good_days <- as.numeric(count(data[data$work != 0, ]))
 ##
