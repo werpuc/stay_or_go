@@ -1,5 +1,6 @@
 library(shiny)
 library(ggplot2)
+library(tidyverse)
 
 setwd("C:/Users/Weronika/stay_or_go/time_after_time")
 
