@@ -1,4 +1,5 @@
 library(ggplot2)
+library(reshape2)
 
 data <- read.csv2("API_POL_DS2_en_csv_v2.csv", sep = ',', check.names = FALSE, na.strings = '', stringsAsFactors=FALSE)
 data <- data[, 2:62]
